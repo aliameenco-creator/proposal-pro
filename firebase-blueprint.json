@@ -1,0 +1,56 @@
+{
+  "entities": {
+    "Proposal": {
+      "title": "Proposal",
+      "description": "A business proposal generated for a client.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "clientName": { "type": "string" },
+        "clientEmail": { "type": "string" },
+        "branding": { "type": "string" },
+        "brandColor": { "type": "string" },
+        "logo": { "type": "string" },
+        "projectDetails": { "type": "string" },
+        "content": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "sent", "approved"] },
+        "ownerId": { "type": "string" },
+        "signature": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "required": ["title", "clientName", "status", "ownerId", "updatedAt"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Company settings for branding.",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "logo": { "type": "string" },
+        "brandColor": { "type": "string" },
+        "updatedAt": { "type": "timestamp" }
+      }
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Notification for the proposal owner.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "proposalId": { "type": "string" },
+        "proposalTitle": { "type": "string" },
+        "clientName": { "type": "string" },
+        "message": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["ownerId", "message", "read", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/proposals/{proposalId}": { "schema": { "$ref": "#/entities/Proposal" }, "description": "" },
+    "/settings/{userId}": { "schema": { "$ref": "#/entities/Settings" }, "description": "" },
+    "/notifications/{notificationId}": { "schema": { "$ref": "#/entities/Notification" }, "description": "" }
+  }
+}

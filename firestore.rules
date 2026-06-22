@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() { return request.auth != null; }
+    function isOwner(ownerId) { return isAuthenticated() && request.auth.uid == ownerId; }
+    function hasRequiredFields(fields) { return request.resource.data.keys().hasAll(fields); }
+    function isValidStatus(status) { return status in ['draft', 'sent', 'approved']; }
+    function isDocOwner() { return isAuthenticated() && request.auth.uid == resource.data.ownerId; }
+
+    match /proposals/{proposalId} {
+      allow read: if isDocOwner() || (resource != null && resource.data.status in ['draft', 'sent', 'approved']);
+      allow create: if isAuthenticated() 
+                    && request.resource.data.ownerId == request.auth.uid
+                    && hasRequiredFields(['title', 'clientName', 'status', 'ownerId', 'updatedAt'])
+                    && isValidStatus(request.resource.data.status);
+      allow update: if 
+        (isDocOwner() && request.resource.data.ownerId == resource.data.ownerId && isValidStatus(request.resource.data.status))
+        || 
+        (
+          resource.data.status in ['draft', 'sent'] 
+          && request.resource.data.status == 'approved'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'signature', 'updatedAt'])
+        );
+      allow delete: if isDocOwner();
+    }
+
+    match /settings/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.ownerId);
+      allow update, delete: if isOwner(resource.data.ownerId);
+      // Allow anyone (including unauthenticated clients) to create a notification when they sign
+      allow create: if hasRequiredFields(['ownerId', 'message', 'read', 'createdAt']) 
+                    && request.resource.data.read == false;
+    }
+  }
+}
