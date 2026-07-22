@@ -1,8 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Questrial&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Georgia", ui-serif, serif;
+  --font-mono: "Space Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-primary: #e38c35;
+  --color-secondary: #6e77cb;
+  --color-base: #1a1a1a;
+  --color-surface: #252525;
+  --color-cream: #f5f1e8;
 }
 
 @media print {
@@ -48,14 +55,14 @@
   h3 { font-size: 1.25rem; margin-top: 1.25rem; margin-bottom: 0.5rem; }
 
   code {
-    background-color: rgba(#616161, 0.1);
+    background-color: rgba(97, 97, 97, 0.1);
     color: #616161;
   }
 
   pre {
     background: #0D0D0D;
     color: #FFF;
-    font-family: 'JetBrainsMono', monospace;
+    font-family: var(--font-mono), monospace;
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
 
@@ -74,12 +81,12 @@
 
   blockquote {
     padding-left: 1rem;
-    border-left: 2px solid rgba(#0D0D0D, 0.1);
+    border-left: 2px solid rgba(13, 13, 13, 0.1);
   }
 
   hr {
     border: none;
-    border-top: 2px solid rgba(#0D0D0D, 0.1);
+    border-top: 2px solid rgba(13, 13, 13, 0.1);
     margin: 2rem 0;
   }
 }

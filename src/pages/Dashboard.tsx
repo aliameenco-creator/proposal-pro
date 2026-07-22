@@ -24,7 +24,7 @@ export default function Dashboard() {
 
     const q = query(
       collection(db, 'proposals'),
-      where('ownerId', '==', user.uid),
+      where('ownerId', '==', user.id),
       orderBy('updatedAt', 'desc')
     );
 

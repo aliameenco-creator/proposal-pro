@@ -19,12 +19,12 @@ export interface BrandProfile {
 }
 
 const DEFAULT_BRAND_KIT = {
-  primary: '#0A271C',
-  secondary: '#62FFB2',
-  accent: '#1A6349',
-  background: '#EAF3EB',
-  text: '#1A6349',
-  fontFamily: 'Questrial'
+  primary: '#e38c35',
+  secondary: '#6e77cb',
+  accent: '#1a1a1a',
+  background: '#f5f1e8',
+  text: '#1a1a1a',
+  fontFamily: 'Plus Jakarta Sans'
 };
 
 export default function Settings() {
@@ -41,7 +41,7 @@ export default function Settings() {
     async function loadSettings() {
       if (!user) return;
       try {
-        const docRef = doc(db, 'settings', user.uid);
+        const docRef = doc(db, 'settings', user.id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -134,7 +134,7 @@ export default function Settings() {
     setSaving(true);
     setSuccessMsg('');
     try {
-      await setDoc(doc(db, 'settings', user.uid), {
+      await setDoc(doc(db, 'settings', user.id), {
         brandProfiles,
         updatedAt: serverTimestamp()
       }, { merge: true });

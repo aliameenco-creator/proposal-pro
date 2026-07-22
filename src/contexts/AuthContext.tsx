@@ -1,48 +1,42 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { auth } from '../firebase';
 
 interface AuthContextType {
-  user: User | null;
+  user: any | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithPassword: (password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    return unsubscribe;
+    const isAuth = localStorage.getItem('proposal_pro_auth');
+    if (isAuth === 'true') {
+      setUser({ id: 'admin', email: 'admin@proposal.pro' });
+    }
+    setLoading(false);
   }, []);
 
-  const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Error signing in with Google", error);
+  const signInWithPassword = async (password: string) => {
+    if (password === 'Ameen@927861') {
+      localStorage.setItem('proposal_pro_auth', 'true');
+      setUser({ id: 'admin', email: 'admin@proposal.pro' });
+    } else {
+      throw new Error("Invalid password");
     }
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error signing out", error);
-    }
+    localStorage.removeItem('proposal_pro_auth');
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, signInWithPassword, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );

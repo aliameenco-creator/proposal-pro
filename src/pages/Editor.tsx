@@ -28,12 +28,12 @@ export default function Editor() {
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
 
   const [brandKit, setBrandKit] = useState({
-    primary: '#0A271C',
-    secondary: '#62FFB2',
-    accent: '#1A6349',
-    background: '#EAF3EB',
-    text: '#1A6349',
-    fontFamily: 'Questrial'
+    primary: '#e38c35',
+    secondary: '#6e77cb',
+    accent: '#1a1a1a',
+    background: '#f5f1e8',
+    text: '#1a1a1a',
+    fontFamily: 'Plus Jakarta Sans'
   });
   
   const [isGenerating, setIsGenerating] = useState(false);
@@ -92,7 +92,7 @@ export default function Editor() {
       if (!user) return;
       
       try {
-        const settingsRef = doc(db, 'settings', user.uid);
+        const settingsRef = doc(db, 'settings', user.id);
         const settingsSnap = await getDoc(settingsRef);
         let profiles: any[] = [];
         if (settingsSnap.exists()) {
@@ -121,7 +121,7 @@ export default function Editor() {
           const docRef = doc(db, 'proposals', id!);
           const docSnap = await getDoc(docRef);
           
-          if (docSnap.exists() && docSnap.data().ownerId === user.uid) {
+          if (docSnap.exists() && docSnap.data().ownerId === user.id) {
             const data = docSnap.data();
             setTitle(data.title || '');
             setClientName(data.clientName || '');
@@ -170,25 +170,20 @@ export default function Editor() {
         
         CRITICAL INSTRUCTIONS:
         1. Focus strictly on deliverables, value proposition, and clear outcomes. Be to-the-point.
-        2. Format the output in clean HTML suitable for a rich text editor.
-        3. Include sections: Executive Summary, Scope of Work, Deliverables, Timeline, Pricing, and Terms.
-        4. Use bullet points and bold text for readability.
+        2. Format the output in clean semantic HTML suitable for a rich text editor. Do NOT use inline CSS for text elements. Rely on semantic HTML tags like <h1>, <h2>, <h3>, <h4>, <p>, <strong>, <em>, <ul>, <li>.
+        3. Include sections: Executive Summary, Scope of Work, Deliverables, Timeline, Pricing, and Terms. Use headings for sections.
+        4. Use bullet points and bold text for readability. Emphasize key outcomes.
         5. MUST INCLUDE VISUALS: Inject clean, modern inline SVG diagrams (e.g., a timeline, process flow, or architecture diagram) to make it visually appealing.
            - CRITICAL: Every <svg> tag MUST include xmlns="http://www.w3.org/2000/svg", a valid viewBox, AND explicit width and height attributes (e.g., width="100%" height="300").
            - CRITICAL: Do NOT use CSS classes or currentColor. Use explicit hex codes for fill and stroke (e.g., fill="${brandKit.primary}").
            - Make the SVGs responsive.
-        6. BRANDING: Apply the following Design System using inline styles:
-           - Primary Color: ${brandKit.primary} (use for main headings and key SVG elements)
-           - Secondary Color: ${brandKit.secondary} (use for highlights/glows)
-           - Accent Color: ${brandKit.accent} (use for emphasis)
-           - Text Color: ${brandKit.text} (use for body text)
-           - Background Color: ${brandKit.background} (use for section backgrounds or SVG backgrounds)
-           - Font Family: '${brandKit.fontFamily}', sans-serif
+           - SVG Colors to use: Primary ${brandKit.primary}, Secondary ${brandKit.secondary}, Accent ${brandKit.accent}, Background ${brandKit.background}.
+        6. PRICING SECTION: Make the Pricing section highly prominent and visually highlighted. Use a semantic HTML <table> or a styled <div> using inline CSS with the brand colors to create a "Pricing Card" effect. Ensure the total price is large and bold.
         7. Do NOT wrap the output in markdown code blocks, just return raw HTML.
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
+        model: 'gemini-2.5-flash',
         contents: prompt,
       });
 
@@ -213,7 +208,11 @@ export default function Editor() {
       editor.commands.setContent(htmlContent);
     } catch (error) {
       console.error("Error generating proposal:", error);
-      alert("Failed to generate proposal. Please try again.");
+      if (error instanceof Error && error.message.includes('Quota')) {
+        alert("API Quota exceeded. Please try again later or upgrade your Gemini API plan.");
+      } else {
+        alert("Failed to generate proposal. Please try again.");
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -233,7 +232,7 @@ export default function Editor() {
         projectDetails,
         content: editor.getHTML(),
         status,
-        ownerId: user.uid,
+        ownerId: user.id,
         updatedAt: serverTimestamp(),
       };
 
@@ -315,7 +314,7 @@ export default function Editor() {
       </div>
     `;
     
-    const opt = {
+    const opt: any = {
       margin:       0,
       filename:     `${title || 'Proposal'}.pdf`,
       image:        { type: 'jpeg', quality: 1 },
@@ -349,7 +348,7 @@ export default function Editor() {
       `;
       
       const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
+        model: 'gemini-2.5-flash',
         contents: prompt,
       });
       
@@ -372,7 +371,11 @@ export default function Editor() {
       setDiagramPrompt('');
     } catch (error) {
       console.error("Error updating diagram:", error);
-      alert("Failed to update diagram.");
+      if (error instanceof Error && error.message.includes('Quota')) {
+        alert("API Quota exceeded. Please try again later or upgrade your Gemini API plan.");
+      } else {
+        alert("Failed to update diagram.");
+      }
     } finally {
       setIsEditingDiagram(false);
     }
@@ -430,20 +433,57 @@ export default function Editor() {
   return (
     <div className="flex flex-col lg:flex-row gap-8 font-sans">
       <style>{`
-        .branded-prose {
-          --tw-prose-body: ${brandKit.text};
-          --tw-prose-headings: ${brandKit.primary};
-          --tw-prose-links: ${brandKit.accent};
-          --tw-prose-bold: ${brandKit.primary};
-          --tw-prose-bullets: ${brandKit.primary};
+        .ProseMirror, .branded-prose {
           color: ${brandKit.text};
           font-family: "${brandKit.fontFamily}", sans-serif;
         }
-        .branded-prose h1, .branded-prose h2, .branded-prose h3, .branded-prose h4, .branded-prose strong {
+        .ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror h4, .ProseMirror h5, .ProseMirror h6,
+        .branded-prose h1, .branded-prose h2, .branded-prose h3, .branded-prose h4, .branded-prose h5, .branded-prose h6 {
+          font-family: "${brandKit.fontFamily}", sans-serif;
+          font-weight: 700;
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+        }
+        .ProseMirror h1, .branded-prose h1, .ProseMirror h2, .branded-prose h2 {
           color: ${brandKit.primary};
         }
-        .branded-prose a {
+        .ProseMirror h3, .branded-prose h3, .ProseMirror h4, .branded-prose h4 {
+          color: ${brandKit.secondary};
+        }
+        .ProseMirror h1, .branded-prose h1 {
+          font-size: 2.25rem;
+        }
+        .ProseMirror h2, .branded-prose h2 {
+          font-size: 1.875rem;
+        }
+        .ProseMirror h3, .branded-prose h3 {
+          font-size: 1.5rem;
+        }
+        .ProseMirror em, .branded-prose em {
+          font-style: italic;
+          color: ${brandKit.secondary};
+        }
+        .ProseMirror strong, .branded-prose strong {
+          color: ${brandKit.primary};
+          font-weight: 700;
+        }
+        .ProseMirror code, .branded-prose code, .ProseMirror pre, .branded-prose pre {
+          font-family: monospace;
+        }
+        .ProseMirror ul, .branded-prose ul {
+          list-style-type: square;
+          padding-left: 1.5rem;
+        }
+        .ProseMirror li::marker, .branded-prose li::marker {
           color: ${brandKit.accent};
+        }
+        .ProseMirror p, .branded-prose p {
+          line-height: 1.7;
+          margin-bottom: 1rem;
+        }
+        .ProseMirror a, .branded-prose a {
+          color: ${brandKit.accent};
+          text-decoration: underline;
         }
       `}</style>
       

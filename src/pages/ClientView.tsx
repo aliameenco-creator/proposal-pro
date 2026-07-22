@@ -3,9 +3,35 @@ import { useParams } from 'react-router-dom';
 import { doc, getDoc, updateDoc, serverTimestamp, addDoc, collection } from 'firebase/firestore';
 import { db } from '../firebase';
 import SignatureCanvas from 'react-signature-canvas';
-import { FileText, CheckCircle2, Loader2, Download } from 'lucide-react';
+import { FileText, CheckCircle2, Loader2, Download, Copy, Check } from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
+
+const CopyField = ({ label, value }: { label: string, value: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-xl shadow-sm">
+      <div className="min-w-0 pr-2">
+        <p className="text-xs text-gray-500 font-medium mb-0.5">{label}</p>
+        <p className="text-sm font-semibold text-gray-900 truncate">{value}</p>
+      </div>
+      <button
+        onClick={handleCopy}
+        className="p-2 rounded-lg transition-colors hover:bg-gray-50 text-gray-500 hover:text-gray-900 flex-shrink-0"
+        title="Copy to clipboard"
+      >
+        {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+};
 
 export default function ClientView() {
   const { id } = useParams();
@@ -109,7 +135,7 @@ export default function ClientView() {
     const element = document.createElement('div');
     element.innerHTML = `
       <style>
-        @import url('https://fonts.googleapis.com/css2?family=${brandKit.fontFamily.replace(/ /g, '+')}:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=${brandKit.fontFamily.replace(/ /g, '+')}:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
         .pdf-container {
           background-color: ${brandKit.background};
           padding: 48px;
@@ -121,17 +147,43 @@ export default function ClientView() {
           margin: 0 auto;
         }
         .branded-prose {
-          --tw-prose-body: ${brandKit.text};
-          --tw-prose-headings: ${brandKit.primary};
-          --tw-prose-links: ${brandKit.accent};
-          --tw-prose-bold: ${brandKit.primary};
-          --tw-prose-bullets: ${brandKit.primary};
+          color: ${brandKit.text};
           font-family: "${brandKit.fontFamily}", sans-serif;
           font-size: 16px;
-          line-height: 1.6;
+          line-height: 1.7;
         }
-        .branded-prose h1, .branded-prose h2, .branded-prose h3, .branded-prose h4, .branded-prose strong {
-          color: ${brandKit.primary} !important;
+        .branded-prose h1, .branded-prose h2, .branded-prose h3, .branded-prose h4, .branded-prose h5, .branded-prose h6 {
+          font-family: "${brandKit.fontFamily}", sans-serif;
+          font-weight: 700;
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+        }
+        .branded-prose h1, .branded-prose h2 {
+          color: ${brandKit.primary};
+        }
+        .branded-prose h3, .branded-prose h4 {
+          color: ${brandKit.secondary};
+        }
+        .branded-prose h1 { font-size: 2.25rem; }
+        .branded-prose h2 { font-size: 1.875rem; }
+        .branded-prose h3 { font-size: 1.5rem; }
+        .branded-prose em {
+          font-style: italic;
+          color: ${brandKit.secondary};
+        }
+        .branded-prose strong {
+          color: ${brandKit.primary};
+          font-weight: 700;
+        }
+        .branded-prose code, .branded-prose pre {
+          font-family: monospace;
+        }
+        .branded-prose ul {
+          list-style-type: square;
+          padding-left: 1.5rem;
+        }
+        .branded-prose li::marker {
+          color: ${brandKit.accent};
         }
         .branded-prose img {
           max-width: 100%;
@@ -165,7 +217,7 @@ export default function ClientView() {
       </div>
     `;
     
-    const opt = {
+    const opt: any = {
       margin:       0,
       filename:     `${proposal.title || 'Proposal'}.pdf`,
       image:        { type: 'jpeg', quality: 1 },
@@ -196,12 +248,12 @@ export default function ClientView() {
   }
 
   const brandKit = proposal.brandKit || {
-    primary: '#0A271C',
-    secondary: '#62FFB2',
-    accent: '#1A6349',
-    background: '#EAF3EB',
-    text: '#1A6349',
-    fontFamily: 'Questrial'
+    primary: '#e38c35',
+    secondary: '#6e77cb',
+    accent: '#1a1a1a',
+    background: '#f5f1e8',
+    text: '#1a1a1a',
+    fontFamily: 'Plus Jakarta Sans'
   };
 
   return (
@@ -211,47 +263,83 @@ export default function ClientView() {
     >
       <style>{`
         .branded-prose {
-          --tw-prose-body: ${brandKit.text};
-          --tw-prose-headings: ${brandKit.primary};
-          --tw-prose-links: ${brandKit.accent};
-          --tw-prose-bold: ${brandKit.primary};
-          --tw-prose-bullets: ${brandKit.primary};
           color: ${brandKit.text};
           font-family: "${brandKit.fontFamily}", sans-serif;
         }
-        .branded-prose h1, .branded-prose h2, .branded-prose h3, .branded-prose h4, .branded-prose strong {
+        .branded-prose h1, .branded-prose h2, .branded-prose h3, .branded-prose h4, .branded-prose h5, .branded-prose h6 {
+          font-family: "${brandKit.fontFamily}", sans-serif;
+          font-weight: 700;
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+        }
+        .branded-prose h1, .branded-prose h2 {
           color: ${brandKit.primary};
+        }
+        .branded-prose h3, .branded-prose h4 {
+          color: ${brandKit.secondary};
+        }
+        .branded-prose h1 {
+          font-size: 2.25rem;
+        }
+        .branded-prose h2 {
+          font-size: 1.875rem;
+        }
+        .branded-prose h3 {
+          font-size: 1.5rem;
+        }
+        .branded-prose em {
+          font-style: italic;
+          color: ${brandKit.secondary};
+        }
+        .branded-prose strong {
+          color: ${brandKit.primary};
+          font-weight: 700;
+        }
+        .branded-prose code, .branded-prose pre {
+          font-family: monospace;
+        }
+        .branded-prose ul {
+          list-style-type: square;
+          padding-left: 1.5rem;
+        }
+        .branded-prose li::marker {
+          color: ${brandKit.accent};
+        }
+        .branded-prose p {
+          line-height: 1.7;
+          margin-bottom: 1rem;
         }
         .branded-prose a {
           color: ${brandKit.accent};
+          text-decoration: underline;
         }
       `}</style>
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Header */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6 w-full md:w-auto">
             {proposal.logo && (
-              <img src={proposal.logo} alt="Company Logo" className="h-12 object-contain" />
+              <img src={proposal.logo} alt="Company Logo" className="max-h-20 max-w-[200px] sm:max-w-[250px] object-contain flex-shrink-0" />
             )}
-            <div>
-              <h1 className="text-2xl font-semibold" style={{ color: brandKit.primary }}>{proposal.title || 'Project Proposal'}</h1>
-              <p className="text-sm mt-1" style={{ color: brandKit.text }}>Prepared for: <span className="font-medium">{proposal.clientName}</span></p>
+            <div className="flex-1 min-w-0 break-words">
+              <h1 className="text-2xl sm:text-3xl font-semibold leading-tight" style={{ color: brandKit.primary }}>{proposal.title || 'Project Proposal'}</h1>
+              <p className="text-sm mt-2" style={{ color: brandKit.text }}>Prepared for: <span className="font-medium">{proposal.clientName}</span></p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto mt-2 md:mt-0 flex-shrink-0">
             <button
               onClick={handleDownloadPDF}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium text-sm"
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium text-sm whitespace-nowrap"
             >
               <Download className="w-4 h-4" /> Download PDF
             </button>
             {proposal.status === 'approved' ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-green-50 text-green-700">
+              <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-green-50 text-green-700 whitespace-nowrap">
                 <CheckCircle2 className="w-4 h-4" /> Approved
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700">
+              <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-700 whitespace-nowrap">
                 Pending Review
               </span>
             )}
@@ -283,6 +371,16 @@ export default function ClientView() {
                 <p className="text-sm font-medium mb-2" style={{ color: brandKit.text }}>Digital Signature:</p>
                 <div className="border border-gray-200 rounded-xl p-4 bg-white inline-block shadow-sm">
                   <img src={proposal.signature} alt="Client Signature" className="max-h-32" />
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-semibold mb-1" style={{ color: brandKit.primary }}>Payment Details</h3>
+                <p className="text-sm mb-4" style={{ color: brandKit.text }}>Please use the following bank details to process the payment for this project.</p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <CopyField label="Account Name" value="Ali Amin" />
+                  <CopyField label="IBAN" value="PK56ABPA0010111635410010" />
                 </div>
               </div>
             </div>
